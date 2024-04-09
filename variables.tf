@@ -3,7 +3,7 @@ variable "region" {
 }
 
 variable "bucket_name" {
-  default = "lab-data-rushabh-patel"
+  default = "lab-data-rushabh-patel-01"
 }
 
 variable "vpc_cidr" {

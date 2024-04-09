@@ -4,11 +4,35 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.39.1"
     }
+
+    vault = {
+      source  = "hashicorp/vault"
+      version = "4.0.0"
+    }
   }
 }
 
 provider "aws" {
   region = var.region
+}
+
+provider "vault" {
+  address          = "http://127.0.0.1:8200"
+  # token = "hvs.0D32cOFyZVXX9wVM8YGUhuwx"
+  skip_child_token = true
+  auth_login {
+    path = "auth/approle/login"
+    parameters = {
+      role_id   = "0bb90715-0430-8937-5d8b-4203d5fc497b"
+      secret_id = "d6840c95-09af-3baf-f462-399bd3b55daa"
+    }
+  }
+}
+
+// we have screate in kv v2 store in vault under rds
+data "vault_kv_secret_v2" "rds" {
+  mount = "kv"
+  name = "rds"
 }
 
 
@@ -104,9 +128,24 @@ resource "aws_instance" "lab_instance" {
   instance_type        = "t2.micro"
   key_name             = aws_key_pair.lab_key.key_name
   subnet_id            = aws_subnet.lab_subnet.id
-    iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
+  iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
   tags = {
     Name = "lab-instance"
   }
 }
 
+// add a RDS instance
+
+resource "aws_db_instance" "lab_db" {
+  allocated_storage      = 20
+  storage_type           = "gp2"
+  engine                 = "mysql"
+  engine_version         = "5.7"
+  instance_class         = "db.t2.micro"
+  db_name                = "lab"
+  username               = data.vault_kv_secret_v2.rds.data.username
+  password               = data.vault_kv_secret_v2.rds.data.password
+  parameter_group_name   = "default.mysql5.7"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.lab_sg.id]
+}
