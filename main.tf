@@ -17,14 +17,14 @@ provider "aws" {
 }
 
 provider "vault" {
-  address          = "http://127.0.0.1:8200"
+  address = "http://127.0.0.1:8200"
   # token = "hvs.0D32cOFyZVXX9wVM8YGUhuwx"
   skip_child_token = true
   auth_login {
     path = "auth/approle/login"
     parameters = {
-      role_id   = "0bb90715-0430-8937-5d8b-4203d5fc497b"
-      secret_id = "d6840c95-09af-3baf-f462-399bd3b55daa"
+      role_id   = var.vault_role_id
+      secret_id = var.vault_secret_id
     }
   }
 }
@@ -32,7 +32,7 @@ provider "vault" {
 // we have screate in kv v2 store in vault under rds
 data "vault_kv_secret_v2" "rds" {
   mount = "kv"
-  name = "rds"
+  name  = "rds"
 }
 
 

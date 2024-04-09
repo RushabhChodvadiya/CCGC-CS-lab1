@@ -15,6 +15,8 @@ variable "subnet_cidr" {
 }
 
 variable "ubuntu_ami" {
-  default = "ami-07d9b9ddc6cd8dd30"
-  
+  default = "ami-07d9b9ddc6cd8dd30" 
 }
+
+variable "vault_role_id" {}
+variable "vault_secret_id" {}
