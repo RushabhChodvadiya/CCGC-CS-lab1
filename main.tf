@@ -35,6 +35,10 @@ data "vault_kv_secret_v2" "rds" {
   name  = "rds"
 }
 
+data "vault_kv_secret_v2" "iam" {
+  mount = "kv"
+  name  = "iam"
+}
 
 resource "aws_iam_role" "ec2_role" {
   name = "ec2_role"
@@ -55,20 +59,21 @@ resource "aws_iam_role" "ec2_role" {
 resource "aws_iam_policy" "ec2_policy" {
   name        = "ec2_policy"
   description = "Allow EC2 to access S3"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = [
-          "s3:GetObject",
-          "s3:ListBucket",
-          "s3:PutObject"
-        ],
-        Effect   = "Allow",
-        Resource = ["arn:aws:s3:::${var.bucket_name}", "arn:aws:s3:::${var.bucket_name}/*"]
-      }
-    ]
-  })
+  # policy = jsonencode({
+  #   Version = "2012-10-17",
+  #   Statement = [
+  #     {
+  #       Action = [
+  #         "s3:GetObject",
+  #         "s3:ListBucket",
+  #         "s3:PutObject"
+  #       ],
+  #       Effect   = "Allow",
+  #       Resource = ["arn:aws:s3:::${var.bucket_name}", "arn:aws:s3:::${var.bucket_name}/*"]
+  #     }
+  #   ]
+  # })
+  policy = data.vault_kv_secret_v2.iam.data.policy
 }
 
 
